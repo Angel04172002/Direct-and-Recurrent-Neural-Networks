@@ -12,9 +12,6 @@ np.random.seed(42)
 # Load Excel data
 excel_data = pd.read_excel('./credit-risk-data.xlsx')
 
-
-print(excel_data)
-
 # Define features and target variable
 X_columns = ['Borrower ID', 'Credit History Absences', 'Credit History Loan Sum ', 'Monthly Income ',
              'Current Liabilities ', 'Num Credit Cards ', 'Age', 'Education', 'Marital Status']
@@ -59,11 +56,17 @@ if excel_data.shape[0] > 0:
     # Train-test split
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Build the model
+    # Reshape X_train and X_test for compatibility with RNN
+    X_train = X_train.reshape((X_train.shape[0], 1, X_train.shape[1]))
+    X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
+
+    # Build the RNN model
+   # Build the RNN model
     model = tf.keras.Sequential([
-        tf.keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+        tf.keras.layers.LSTM(64, activation='relu', input_shape=(None, X_train.shape[2])),
         tf.keras.layers.Dense(1, activation='sigmoid')
     ])
+
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
@@ -76,10 +79,13 @@ if excel_data.shape[0] > 0:
     print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
 
     # Generate predictions for new data
-    new_data = np.random.rand(5, X_train.shape[1])
+    # Generate predictions for new data
+    new_data = np.random.rand(5, X_train.shape[1], X_train.shape[2])  # Reshape for compatibility with RNN
     predictions = model.predict(new_data)
+
 
     print('Predictions:')
     print(predictions)
+
 else:
     print("No samples left after preprocessing.")
